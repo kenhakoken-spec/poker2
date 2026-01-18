@@ -141,8 +141,7 @@ export function HandResultModal({
       // Update player hands with winner info
       setPlayerHands(prev => {
         const updated = { ...prev };
-        Object.keys(updated).forEach(pos => {
-          const playerState = updated[pos as Position];
+        Object.entries(updated).forEach(([pos, playerState]) => {
           if (playerState) {
             playerState.isWinner = false; // All opponents lost
           }
@@ -156,10 +155,11 @@ export function HandResultModal({
         // Update player hands with winner info
         setPlayerHands(prev => {
           const updated = { ...prev };
-          Object.keys(updated).forEach(pos => {
-            const playerState = updated[pos as Position];
-            if (playerState) {
-              playerState.isWinner = pos === winner;
+          Object.entries(updated).forEach(([pos, playerState]) => {
+            if (playerState && pos === winner) {
+              playerState.isWinner = true;
+            } else if (playerState) {
+              playerState.isWinner = false;
             }
           });
           return updated;
@@ -228,17 +228,18 @@ export function HandResultModal({
       return;
     }
 
-    if (!currentEditingPlayer) return;
+    if (!currentEditingPlayer || currentEditingPlayer === 'HERO') return;
 
     setPlayerHands(prev => {
       const updated = { ...prev };
-      const playerState = updated[currentEditingPlayer] || {
-        position: currentEditingPlayer,
+      const position = currentEditingPlayer as Position;
+      const playerState = updated[position] || {
+        position,
         hand: null,
         mucked: false,
         isWinner: false,
       };
-      updated[currentEditingPlayer] = playerState;
+      updated[position] = playerState;
       
       if (!playerState.hand || playerState.hand[0] === '') {
         // First card
@@ -255,7 +256,8 @@ export function HandResultModal({
           } else {
             // Move to next player or finish (opponentsOnlyのプレーヤーのみを対象)
             const opponentPositions = opponentsOnly.map(p => p.position);
-            const currentIndex = opponentPositions.indexOf(currentEditingPlayer);
+            const position = currentEditingPlayer as Position;
+            const currentIndex = opponentPositions.indexOf(position);
             if (currentIndex < opponentPositions.length - 1) {
               setCurrentEditingPlayer(opponentPositions[currentIndex + 1]);
               setEditingCardIndex(0);
@@ -276,7 +278,8 @@ export function HandResultModal({
         } else {
           // Move to next player or finish (opponentsOnlyのプレーヤーのみを対象)
           const opponentPositions = opponentsOnly.map(p => p.position);
-          const currentIndex = opponentPositions.indexOf(currentEditingPlayer);
+          const position = currentEditingPlayer as Position;
+          const currentIndex = opponentPositions.indexOf(position);
           if (currentIndex < opponentPositions.length - 1) {
             setCurrentEditingPlayer(opponentPositions[currentIndex + 1]);
             setEditingCardIndex(0);
@@ -515,10 +518,11 @@ export function HandResultModal({
                           setWinnerPosition(player.position);
                           setPlayerHands(prev => {
                             const updated = { ...prev };
-                            Object.keys(updated).forEach(pos => {
-                              const playerState = updated[pos as Position];
-                              if (playerState) {
-                                playerState.isWinner = pos === player.position;
+                            Object.entries(updated).forEach(([pos, playerState]) => {
+                              if (playerState && pos === player.position) {
+                                playerState.isWinner = true;
+                              } else if (playerState) {
+                                playerState.isWinner = false;
                               }
                             });
                             return updated;
